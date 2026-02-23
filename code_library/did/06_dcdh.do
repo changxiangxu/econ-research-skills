@@ -1,130 +1,90 @@
 /*==============================================================================
   File:     06_dcdh.do
-  Method:   de Chaisemartin & D'Haultfœuille (2020) — did_multiplegt
-  Author:   econ-research-skills
+  Method:   de Chaisemartin & D'Haultfœuille (2020) — Static
   
   Reference:
-    de Chaisemartin, C. & D'Haultfœuille, X. (2020). "Two-Way Fixed Effects 
-    Estimators with Heterogeneous Treatment Effects." American Economic Review.
-    
-    de Chaisemartin, C. & D'Haultfœuille, X. (2023). "Two-Way Fixed Effects 
-    and Differences-in-Differences with Heterogeneous Treatment Effects: 
-    A Survey." Econometrics Journal.
+    de Chaisemartin, C. & D'Haultfœuille, X. (2020). "Two-Way Fixed 
+    Effects Estimators with Heterogeneous Treatment Effects."
+    American Economic Review.
   
-  Required Packages:
-    - did_multiplegt (install: ssc install did_multiplegt)
+  Required: ssc install did_multiplegt, replace
+            ssc install event_plot, replace
   
-  Why dCDH?
-    ✅ Minimal assumptions — does not require "no anticipation"
-    ✅ Works with non-binary / non-absorbing treatments (switchers!)
-    ✅ First paper to formally show TWFE bias (2020 AER — very influential)
-    ✅ Allows for treatment effect heterogeneity across groups and time
-  
-  When to Use (vs CS or BJS):
-    - Treatment can switch on AND off (not absorbing)
-    - Continuous treatment intensity (not just 0/1)
-    - You want the most conservative assumptions
+  Code Source: Adapted from wenddymacro/straggered_did_13 Method (2)
+               and Borusyak five_estimators_example.do
 ==============================================================================*/
 
 clear all
-set more off
-set seed 12345
+timer clear
+set seed 10
+global T = 15
+global I = 400
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 1: DATA
+* SECTION 1: DATA (same verified DGP)
 * ═══════════════════════════════════════════════════════════
 
-set obs 40
-gen id = _n
-expand 30
-bysort id: gen time = _n
+set obs `=$I*$T'
+gen i = int((_n-1)/$T )+1
+gen t = mod((_n-1)/$T )+1
+tsset i t
 
-gen cohort = .
-replace cohort = 10 if id <= 10
-replace cohort = 15 if id > 10 & id <= 20
-replace cohort = 20 if id > 20 & id <= 30
-replace cohort = 0  if id > 30
+gen Ei = ceil(runiform()*7)+$T -6 if t==1
+bys i (t): replace Ei = Ei[1]
+gen K = t-Ei
+gen D = K>=0 & Ei!=.
 
-gen treat = (cohort > 0 & time >= cohort)
-
-gen true_att = 0
-replace true_att = 1.0 if cohort == 10 & treat == 1
-replace true_att = 2.0 if cohort == 15 & treat == 1
-replace true_att = 3.0 if cohort == 20 & treat == 1
-
-gen unit_fe = id * 0.5
-gen time_fe = 0.3 * time
-gen epsilon = rnormal(0, 1)
-gen y = unit_fe + time_fe + true_att + epsilon
-
-xtset id time
+gen tau = cond(D==1, (t-Ei), 0)
+gen eps = rnormal()
+gen Y = i + 3*t + tau*D + eps
 
 
 * ═══════════════════════════════════════════════════════════
 * SECTION 2: dCDH ESTIMATION
 * ═══════════════════════════════════════════════════════════
+* Source: wenddymacro Method (2), Borusyak five_estimators_example.do
+*
 * did_multiplegt syntax:
-*   did_multiplegt Y group_var time_var treatment_var [, options]
-*
-* Key arguments:
-*   Y = outcome
-*   G = group identifier (e.g., unit id)
-*   T = time identifier
-*   D = treatment indicator (can be binary or continuous!)
-*
-* Key options:
-*   robust_dynamic = compute dynamic effects (event study)
-*   dynamic(#)     = number of post-treatment periods
-*   placebo(#)     = number of pre-treatment placebo tests
-*   breps(#)       = bootstrap repetitions for SE
-*   cluster(var)   = clustering variable
+*   did_multiplegt Y i t D, robust_dynamic dynamic(#) placebo(#)
+*     longdiff_placebo breps(#) cluster(var)
 
-di _newline "═══ de Chaisemartin & D'Haultfœuille (2020) ═══"
+did_multiplegt Y i t D, robust_dynamic dynamic(5) placebo(5) ///
+	longdiff_placebo breps(100) cluster(i)
+// Y:    outcome variable
+// i:    unit id variable
+// t:    time period variable
+// D:    treatment indicator
+//
+// robust_dynamic: uses dCdH (2021) estimator for intertemporal effects
+// dynamic(5): estimate 5 post-treatment periods
+// placebo(5): estimate 5 pre-treatment periods
+// longdiff_placebo: use long differences for placebos (comparable to dynamic)
+// breps(100): bootstrap iterations for SE
+// cluster(i): block bootstrap at unit level
+//
+// NOTE from wenddymacro: "by default placebos are first-difference estimators,
+// while dynamic effects are long-difference estimators, so they are not 
+// comparable." Always use longdiff_placebo to make them comparable.
 
-* Step 2.1: Basic estimation
-did_multiplegt y id time treat,                                        ///
-    robust_dynamic                                                      ///
-    dynamic(5)                                                          ///
-    placebo(3)                                                          ///
-    breps(50)                                                           ///
-    cluster(id)
+* Plot
+event_plot e(estimates)#e(variances), default_look ///
+	graph_opt(xtitle("Periods since the event") ///
+	ytitle("Average causal effect") ///
+	title("de Chaisemartin and D'Haultfoeuille (2020)") ///
+	xlabel(-5(1)5) name(dCdH, replace)) ///
+	stub_lag(Effect_#) stub_lead(Placebo_#) together
 
-* 📌 Output shows:
-*   - Effect_0: instantaneous effect (at treatment time)
-*   - Effect_1, Effect_2, ...: dynamic effects (1, 2, ... periods after)
-*   - Placebo_1, Placebo_2, ...: pre-treatment tests (should be ≈ 0)
-*   - Joint nullity of placebos: parallel trends test
-
-
-* ═══════════════════════════════════════════════════════════
-* SECTION 3: EVENT STUDY PLOT
-* ═══════════════════════════════════════════════════════════
-* did_multiplegt automatically produces an event study graph
-* if robust_dynamic is specified
-
-* The graph shows:
-*   Left side (Placebo): should be close to 0
-*   Right side (Effects): the dynamic treatment effects
-*   Vertical line: separates pre and post treatment
-
-* graph export "event_study_dcdh.pdf", replace
+* Store for later comparison
+matrix dcdh_b = e(estimates)
+matrix dcdh_v = e(variances)
 
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 4: WHEN TO PREFER dCDH
+* SECTION 3: KEY INSIGHT
 * ═══════════════════════════════════════════════════════════
-*
-* Use dCDH when:
-*   1. Treatment is NOT absorbing (units can switch treatment on/off)
-*      → CS and BJS assume absorbing treatment
-*   2. Treatment is continuous (not just 0/1)
-*   3. You want the most conservative/minimal assumptions
-*   4. Referee specifically asks for dCDH (it's an AER paper!)
-*
-* Use CS or BJS instead when:
-*   1. Treatment is absorbing (most policy evaluations)
-*   2. You want directly interpretable ATT(g,t) (CS)
-*   3. You want imputation-based efficiency (BJS)
-*   4. Speed matters (dCDH bootstrap can be slow with large datasets)
-
-di _newline "  DONE: 06_dcdh.do"
+* 📌 dCDH adapts DID for settings where:
+*    - Treatment can switch on/off (non-absorbing)
+*    - Want to allow heterogeneous effects across groups/time
+*    
+* 📌 For the dynamic version (switching treatment, non-binary)
+*    → use 08_did_multiplegt_dyn.do instead

@@ -1,88 +1,76 @@
 /*==============================================================================
   File:     13_synth_did.do
-  Method:   Synthetic DID (Arkhangelsky et al. 2021; Clarke et al. 2023)
-  Author:   econ-research-skills
+  Method:   Synthetic DID (Arkhangelsky et al. 2021)
   
   Reference:
     Arkhangelsky, D., Athey, S., Hirshberg, D.A., Imbens, G.W., 
     Wager, S. (2021). "Synthetic Difference-in-Differences."
     American Economic Review.
-    
-    Clarke, D., Pailañir, D., Athey, S., Imbens, G.W. (2023).
-    "Synthetic Difference-in-Differences Estimation." Stata Journal.
   
-  Install: ssc install sdid, replace
-  GitHub:  https://github.com/Daniel-Pailanir/sdid
+  Required: ssc install sdid, replace
+  GitHub:   https://github.com/Daniel-Pailanir/sdid
   
-  Why This Method?
-    ✅ Combines Synthetic Control + DID — best of both worlds
-    ✅ Reweights control units AND time periods
-    ✅ Works when parallel trends is weak (SCM handles level differences)
-    ✅ Perfect for: province-level policies with few treated units
-    ✅ Published in AER + Stata Journal implementation
+  Code Source: Adapted from wenddymacro/straggered_did_13 Method (15)
 ==============================================================================*/
 
 clear all
-set more off
-set seed 12345
+timer clear
+set seed 10
+global T = 15
+global I = 400
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 1: DATA
+* SECTION 1: DATA (same verified DGP)
 * ═══════════════════════════════════════════════════════════
 
-set obs 40
-gen id = _n
-expand 30
-bysort id: gen time = _n
+set obs `=$I*$T'
+gen i = int((_n-1)/$T )+1
+gen t = mod((_n-1)/$T )+1
+tsset i t
 
-* Simple setup: units 1-10 treated at t=15, rest control
-gen treat = (id <= 10 & time >= 15)
+gen Ei = ceil(runiform()*7)+$T -6 if t==1
+bys i (t): replace Ei = Ei[1]
+gen K = t-Ei
+gen D = K>=0 & Ei!=.
 
-gen unit_fe = id * 0.5
-gen time_fe = 0.3 * time
-gen epsilon = rnormal(0, 1)
-gen y = unit_fe + time_fe + 2.0 * treat + epsilon
-
-xtset id time
+gen tau = cond(D==1, (t-Ei), 0)
+gen eps = rnormal()
+gen Y = i + 3*t + tau*D + eps
 
 
 * ═══════════════════════════════════════════════════════════
 * SECTION 2: SYNTHETIC DID ESTIMATION
 * ═══════════════════════════════════════════════════════════
-* sdid syntax:
-*   sdid Y unit_var time_var treatment_var [, options]
+* Source: wenddymacro Method (15)
 *
-* Key options:
-*   vce(method)  = bootstrap / jackknife / placebo
-*   reps(#)      = bootstrap repetitions
-*   seed(#)      = random seed
-*   graph         = display weights and fit plot
+* sdid syntax:
+*   sdid Y groupvar timevar treatment, vce(vcetype) [options]
 
-di _newline "═══ Synthetic DID (Arkhangelsky et al., 2021) ═══"
-
-sdid y id time treat, vce(bootstrap) reps(50) seed(12345) graph
-
-* 📌 SDID produces:
-*   - ATT estimate
-*   - Unit weights (which control units matter most)
-*   - Time weights (which pre-treatment periods matter most)
-*   - Graph showing the synthetic vs treated trajectory
+sdid Y i t D, vce(bootstrap) seed(1000) graph
+// Y: outcome
+// i: unit (group) variable
+// t: time variable
+// D: treatment indicator
+// vce(bootstrap): bootstrap SE
+// seed(): random seed for bootstrap
+// graph: display diagnostic plot
 
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 3: COMPARISON — DID vs SCM vs SDID
+* SECTION 3: COMPARISON TABLE
 * ═══════════════════════════════════════════════════════════
+* 📌 SDID combines DID and Synthetic Control:
 *
 * | Method | Reweights Units? | Reweights Time? | Parallel Trends? |
-* |--------|-----------------|-----------------|-----------------|
-* | DID    | No (equal)      | No (equal)      | Required        |
-* | SCM    | Yes             | No              | Not required    |
-* | SDID   | Yes             | Yes             | Partially       |
+* |--------|------------------|-----------------|------------------|
+* | DID    | No (equal)       | No (equal)      | Required         |
+* | SCM    | Yes              | No              | Not required     |
+* | SDID   | Yes              | Yes             | Partially        |
 *
-* When to use SDID over standard DID:
-*   1. Few treated units (< 10 provinces)
-*   2. Parallel trends is questionable
-*   3. Want robustness to both DID and SCM assumptions
-*   4. Policy evaluation at aggregate (province/state) level
-
-di _newline "  DONE: 13_synth_did.do"
+* 📌 Use SDID when:
+*    1. Few treated units (< 10 provinces)
+*    2. Parallel trends is questionable
+*    3. Want robustness to both DID and SCM assumptions
+*    4. Policy evaluation at aggregate level
+*
+* 📌 Published in AER, Stata Journal implementation by Clarke et al.

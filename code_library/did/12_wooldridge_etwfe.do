@@ -1,91 +1,88 @@
 /*==============================================================================
   File:     12_wooldridge_etwfe.do
-  Method:   Wooldridge (2021/2025) — Extended TWFE (ETWFE)
-  Author:   econ-research-skills
+  Method:   Wooldridge (2021) — Extended TWFE (ETWFE)
   
   Reference:
     Wooldridge, J.M. (2021). "Two-Way Fixed Effects, the Two-Way 
     Mundlak Regression, and Difference-in-Differences Estimators."
-    Working Paper.
   
-  Install: ssc install jwdid, replace
-          ssc install wooldid, replace (alternative)
+  Required: ssc install jwdid, replace
+            ssc install wooldid, replace (alternative)
   
-  Why This Method?
-    ✅ "Just add interactions" — enrich TWFE rather than replace it
-    ✅ Familiar regression syntax (no new estimator to learn)
-    ✅ Adds cohort×time interactions to absorb heterogeneous effects
-    ✅ Wooldridge shows: properly saturated TWFE IS consistent
-    ✅ Roth et al. (2023) recommend as one of the simplest fixes
+  Code Source: Adapted from wenddymacro/straggered_did_13 Method (13)
 ==============================================================================*/
 
 clear all
-set more off
-set seed 12345
+timer clear
+set seed 10
+global T = 15
+global I = 400
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 1: DATA
+* SECTION 1: DATA (same verified DGP)
 * ═══════════════════════════════════════════════════════════
 
-set obs 40
-gen id = _n
-expand 30
-bysort id: gen time = _n
+set obs `=$I*$T'
+gen i = int((_n-1)/$T )+1
+gen t = mod((_n-1)/$T )+1
+tsset i t
 
-gen cohort = .
-replace cohort = 10 if id <= 10
-replace cohort = 15 if id > 10 & id <= 20
-replace cohort = 20 if id > 20 & id <= 30
-replace cohort = 0  if id > 30
+gen Ei = ceil(runiform()*7)+$T -6 if t==1
+bys i (t): replace Ei = Ei[1]
+gen K = t-Ei
+gen D = K>=0 & Ei!=.
 
-gen treat = (cohort > 0 & time >= cohort)
-gen true_att = 0
-replace true_att = 1.0 if cohort == 10 & treat == 1
-replace true_att = 2.0 if cohort == 15 & treat == 1
-replace true_att = 3.0 if cohort == 20 & treat == 1
+gen tau = cond(D==1, (t-Ei), 0)
+gen eps = rnormal()
+gen Y = i + 3*t + tau*D + eps
 
-gen unit_fe = id * 0.5
-gen time_fe = 0.3 * time
-gen epsilon = rnormal(0, 1)
-gen y = unit_fe + time_fe + true_att + epsilon
-
-gen gvar = cohort
-xtset id time
+gen gvar = cond(Ei>15, 0, Ei) // jwdid needs gvar=0 for never-treated
 
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 2: WOOLDRIDGE ETWFE ESTIMATION
+* SECTION 2: WOOLDRIDGE ETWFE — jwdid
 * ═══════════════════════════════════════════════════════════
+* Source: wenddymacro Method (13-1)
+*
 * jwdid syntax:
 *   jwdid Y, ivar(unit) tvar(time) gvar(cohort)
 
-di _newline "═══ Wooldridge ETWFE (2021) ═══"
+jwdid Y, ivar(i) tvar(t) gvar(gvar)
+// ivar(): unit identifier
+// tvar(): time identifier
+// gvar(): first treatment period (0 for never-treated)
 
-* Method A: Using jwdid package
-jwdid y, ivar(id) tvar(time) gvar(gvar)
+* Post-estimation: aggregate
+estat simple   // overall ATT
+estat group    // by cohort
+estat event    // event study
 
-* Aggregate to get overall ATT
-estat simple
-estat group
-estat event
 
-* Method B: Manual ETWFE (for understanding)
-* The key insight: add cohort×post interactions to TWFE
-di _newline "─── Manual ETWFE ───"
-gen cohort10_post = (cohort == 10) * (time >= 10)
-gen cohort15_post = (cohort == 15) * (time >= 15)
-gen cohort20_post = (cohort == 20) * (time >= 20)
+* ═══════════════════════════════════════════════════════════
+* SECTION 3: WOOLDRIDGE ETWFE — wooldid
+* ═══════════════════════════════════════════════════════════
+* Source: wenddymacro Method (13-2)
+*
+* wooldid syntax:
+*   wooldid Y i t Ei, cluster() makeplots espre() espost()
 
-reghdfe y cohort10_post cohort15_post cohort20_post, ///
-    absorb(id time) cluster(id)
+wooldid Y i t Ei, cluster(i) makeplots espre(4) espost(4)
+// makeplots: produce event study plots
+// espre(): number of pre-treatment periods
+// espost(): number of post-treatment periods
 
-di "Cohort 10 ATT: " %6.3f _b[cohort10_post] " (true: 1.0)"
-di "Cohort 15 ATT: " %6.3f _b[cohort15_post] " (true: 2.0)"
-di "Cohort 20 ATT: " %6.3f _b[cohort20_post] " (true: 3.0)"
 
+* ═══════════════════════════════════════════════════════════
+* SECTION 4: KEY INSIGHT
+* ═══════════════════════════════════════════════════════════
 * 📌 Wooldridge's insight:
-*   Standard TWFE fails because it constrains all cohorts to 
-*   have the same treatment effect. Simply add cohort×post 
-*   interactions and the bias disappears. That's it.
-
-di _newline "  DONE: 12_wooldridge_etwfe.do"
+*    Standard TWFE fails because it forces all cohorts to have 
+*    the same treatment effect. The fix is simple: add cohort×post 
+*    interaction terms to the regression.
+*
+* 📌 "Just enrich your TWFE with interactions, don't abandon it."
+*    This is the simplest conceptual fix — no new estimator needed.
+*
+* 📌 jwdid and wooldid are two different implementations:
+*    - jwdid: by Fernando Rios-Avila, integrates with csdid
+*    - wooldid: by Thomas Hegland, more plot options

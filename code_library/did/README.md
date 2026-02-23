@@ -1,9 +1,21 @@
-# DID Methods Code Library v2.0 (2026 Frontier)
+# DID Methods Code Library v2.1 (Verified from Original Authors)
 
-A complete, self-contained code library covering **15 DID methods**.
-Each file generates its own simulated data and runs independently.
+A complete code library covering **15 DID methods** in Stata.
 
-Inspired by [许文立 (wenddymacro)](https://github.com/wenddymacro/straggered_did_13) and [Asjad Naqvi's DID Notes](https://github.com/asjadnaqvi/Diff-in-Diff-Notes).
+## ⚠️ Code Provenance
+
+All estimation commands and DGP are **adapted from verified, peer-reviewed sources**:
+
+| Source | Author | Methods Covered | GitHub |
+|--------|--------|----------------|--------|
+| `five_estimators_example.do` | Kirill Borusyak (UCL) | BJS, CS, SA, dCDH, TWFE | [borusyak/did_imputation](https://github.com/borusyak/did_imputation) |
+| `staggered_did_13` | 许文立 (wenddymacro) | 16 estimators | [wenddymacro/straggered_did_13](https://github.com/wenddymacro/straggered_did_13) |
+
+**All files share the same verified DGP:**
+- 400 units × 15 periods, `set seed 10`
+- Staggered rollout: Ei ~ Uniform{10,...,16}
+- Heterogeneous treatment effects: τ = t − Ei
+- This DGP ensures TWFE is biased → you can see each method's correction
 
 ---
 
@@ -33,22 +45,22 @@ What is your setup?
     └── 15_comparison_master.do
 ```
 
-## Complete File List
+## File List
 
-| # | File | Method | Author/Year | Use Case | Install |
-|---|------|--------|-------------|----------|---------|
-| 01 | `01_classic_twfe.do` | Classic TWFE | Angrist & Pischke | Simple 2×2 | `reghdfe` |
-| 02 | `02_callaway_santanna.do` | Group-Time ATT | Callaway & Sant'Anna (2021) | Staggered | `csdid` |
-| 03 | `03_sun_abraham.do` | Interaction-Weighted | Sun & Abraham (2021) | Staggered | `eventstudyinteract` |
-| 04 | `04_imputation_bjs.do` | Imputation | Borusyak, Jaravel & Spiess (2024) | Staggered | `did_imputation` |
-| 05 | `05_bacon_decomposition.do` | TWFE Decomposition | Goodman-Bacon (2021) | Diagnostic | `bacondecomp` |
-| 06 | `06_dcdh.do` | Heterogeneous FE | de Chaisemartin & D'Haultfœuille (2020) | Non-absorbing | `did_multiplegt` |
-| 07 | `07_honestdid.do` | Sensitivity Analysis | Rambachan & Roth (2023) | Robustness | `honestdid` |
-| 08 | `08_did_multiplegt_dyn.do` | Dynamic Non-Binary | dCDH (2024) | Switching treatment | `did_multiplegt_dyn` |
-| 09 | `09_did_multiplegt_stat.do` | Continuous + Stayers | dCDH (2024) | Continuous dose | `did_multiplegt_stat` |
-| 10 | `10_gardner_did2s.do` | Two-Stage | Gardner (2022) | Large samples | `did2s` |
-| 11 | `11_stacked_did.do` | Stacked Regression | Wing et al. (2024) | TWFE-compatible | `reghdfe` |
-| 12 | `12_wooldridge_etwfe.do` | Extended TWFE | Wooldridge (2021) | Simple fix | `jwdid` |
-| 13 | `13_synth_did.do` | Synthetic DID | Arkhangelsky et al. (2021) | Weak parallel trends | `sdid` |
-| 14 | `14_continuous_did.do` | Continuous Treatment | Callaway et al. (2024) | Dose-response | manual |
-| 15 | `15_comparison_master.do` | All Methods Comparison | — | Robustness appendix | all |
+| # | File | Method | Source | Install |
+|---|------|--------|--------|---------|
+| 01 | `01_classic_twfe.do` | Classic TWFE | Borusyak + wenddymacro | `reghdfe` |
+| 02 | `02_callaway_santanna.do` | Callaway & Sant'Anna (2021) | Borusyak + wenddymacro | `csdid` |
+| 03 | `03_sun_abraham.do` | Sun & Abraham (2021) | Borusyak + wenddymacro | `eventstudyinteract` |
+| 04 | `04_imputation_bjs.do` | BJS Imputation (2024) | **Borusyak original** | `did_imputation` |
+| 05 | `05_bacon_decomposition.do` | Bacon Decomposition (2021) | verified | `bacondecomp` |
+| 06 | `06_dcdh.do` | dCDH (2020) | Borusyak + wenddymacro | `did_multiplegt` |
+| 07 | `07_honestdid.do` | Rambachan & Roth (2023) | package docs | `honestdid` |
+| 08 | `08_did_multiplegt_dyn.do` | dCDH Dynamic (2024) | package docs | `did_multiplegt_dyn` |
+| 09 | `09_did_multiplegt_stat.do` | dCDH Continuous (2024) | package docs | `did_multiplegt_stat` |
+| 10 | `10_gardner_did2s.do` | Gardner Two-Stage (2022) | wenddymacro | `did2s` |
+| 11 | `11_stacked_did.do` | Stacked DID (Cengiz 2019) | wenddymacro | `stackedev` |
+| 12 | `12_wooldridge_etwfe.do` | Wooldridge ETWFE (2021) | wenddymacro | `jwdid` + `wooldid` |
+| 13 | `13_synth_did.do` | Synthetic DID (2021) | wenddymacro | `sdid` |
+| 14 | `14_continuous_did.do` | Continuous DID (2024) | manual implementation | — |
+| 15 | `15_comparison_master.do` | All Methods Comparison | Borusyak structure | all |

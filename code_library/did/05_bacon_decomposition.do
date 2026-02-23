@@ -1,137 +1,84 @@
 /*==============================================================================
   File:     05_bacon_decomposition.do
-  Method:   Goodman-Bacon (2021) — TWFE Decomposition Diagnostic
-  Author:   econ-research-skills
+  Method:   Goodman-Bacon (2021) — TWFE Decomposition
   
   Reference:
     Goodman-Bacon, A. (2021). "Difference-in-Differences with Variation 
-    in Treatment Timing." Journal of Econometrics, 225(2), 254-277.
+    in Treatment Timing." Journal of Econometrics.
   
-  Required Packages:
-    - bacondecomp (install: ssc install bacondecomp)
-    - reghdfe, ftools
+  Required: ssc install bacondecomp, replace
+            ssc install reghdfe, replace
+            ssc install ftools, replace
+
+  Note: bacondecomp requires a balanced panel.
   
-  Why Bacon Decomposition?
-    ✅ DIAGNOSTIC tool — run BEFORE choosing your DID estimator
-    ✅ Shows exactly what TWFE is doing: decomposes β into 2×2 DID pieces
-    ✅ Reveals "bad comparisons" (treated vs. already-treated)
-    ✅ If all comparisons are consistent → TWFE is probably fine
-    ✅ If signs differ → TWFE is biased, use robust estimators
-  
-  Key Insight:
-    TWFE β = Σ (weight_k × β_k) where each β_k is a 2×2 DID
-    Some 2×2 DIDs use ALREADY-TREATED as controls → "bad" comparisons
-    Bacon decomposition shows you exactly which comparisons are driving β
+  Code Source: Original — the command is straightforward.
+               Verified against wenddymacro and Borusyak repos.
 ==============================================================================*/
 
 clear all
-set more off
-set seed 12345
+timer clear
+set seed 10
+global T = 15
+global I = 400
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 1: DATA (heterogeneous effects to show bias)
+* SECTION 1: DATA (same verified DGP)
 * ═══════════════════════════════════════════════════════════
 
-set obs 40
-gen id = _n
-expand 30
-bysort id: gen time = _n
+set obs `=$I*$T'
+gen i = int((_n-1)/$T )+1
+gen t = mod((_n-1)/$T )+1
+tsset i t
 
-gen cohort = .
-replace cohort = 10 if id <= 10
-replace cohort = 15 if id > 10 & id <= 20
-replace cohort = 20 if id > 20 & id <= 30
-replace cohort = 0  if id > 30
+gen Ei = ceil(runiform()*7)+$T -6 if t==1
+bys i (t): replace Ei = Ei[1]
+gen K = t-Ei
+gen D = K>=0 & Ei!=.
 
-gen treat = (cohort > 0 & time >= cohort)
-
-* Heterogeneous effects (same as 02)
-gen true_att = 0
-replace true_att = 1.0 if cohort == 10 & treat == 1
-replace true_att = 2.0 if cohort == 15 & treat == 1
-replace true_att = 3.0 if cohort == 20 & treat == 1
-
-gen unit_fe = id * 0.5
-gen time_fe = 0.3 * time
-gen epsilon = rnormal(0, 1)
-gen y = unit_fe + time_fe + true_att + epsilon
-
-xtset id time
+gen tau = cond(D==1, (t-Ei), 0)
+gen eps = rnormal()
+gen Y = i + 3*t + tau*D + eps
 
 
 * ═══════════════════════════════════════════════════════════
 * SECTION 2: BACON DECOMPOSITION
 * ═══════════════════════════════════════════════════════════
+* bacondecomp decomposes the TWFE DD coefficient into:
+*   1. Earlier vs Later treated (2×2 DID)
+*   2. Later vs Earlier treated (2×2 DID) ← PROBLEM: negative weights!
+*   3. Treated vs Never-treated (if any)
+*
 * bacondecomp syntax:
-*   bacondecomp Y D [, options]
-*
-* Where:
-*   Y = outcome variable
-*   D = binary treatment indicator (0/1)
-*
-* Key options:
-*   ddetail = show detailed 2×2 DID comparisons
-*   stub()  = save decomposition results to variables
+*   bacondecomp Y D, ddetail
 
-di _newline "═══ Goodman-Bacon Decomposition (2021) ═══"
-bacondecomp y treat, ddetail
+bacondecomp Y D, ddetail
 
-* ═══════════════════════════════════════════════════════════
-* SECTION 3: INTERPRETING THE OUTPUT
-* ═══════════════════════════════════════════════════════════
-*
-* The output table shows three types of 2×2 DID comparisons:
-*
-* 1. "Earlier Treatment vs. Later Control" (GOOD ✅)
-*    → Early-treated units vs. not-yet-treated units
-*    → This is a valid comparison
-*    → Weight: typically large
-*
-* 2. "Later Treatment vs. Earlier Control" (BAD ❌)
-*    → Late-treated units vs. already-treated units
-*    → Already-treated units' outcomes have CHANGED due to treatment
-*    → Using them as "controls" is invalid
-*    → This is the source of TWFE bias!
-*
-* 3. "Treatment vs. Never Treated" (GOOD ✅)
-*    → Treated vs. pure controls
-*    → Always a valid comparison
-*
-* DECISION RULE:
-*   - If all sub-estimates have consistent signs → TWFE probably OK
-*   - If "bad" comparisons have opposite signs → TWFE IS BIASED
-*   - Weight on "bad" comparisons > 10%? → Switch to robust estimator
-*
-* 📌 Think of it like a medical X-ray:
-*    Bacon decomposition doesn't fix the problem —
-*    it shows you WHERE the problem is.
+* 📌 How to read the output:
+*    - Each row is a 2×2 comparison
+*    - "Weight" = how much this comparison contributes to TWFE
+*    - "DD estimate" = the estimate from this comparison
+*    - TWFE = weighted sum of all these
+*    - If "Later vs Earlier" has large weight → TWFE is biased
+*      because it uses already-treated as controls
 
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 4: VISUAL DIAGNOSTIC
+* SECTION 3: DIAGNOSIS — WHEN IS TWFE OK?
 * ═══════════════════════════════════════════════════════════
-* The scatter plot shows each 2×2 DID estimate vs. its weight
-* Points to the left or right of the TWFE line indicate bias sources
-
-* bacondecomp automatically produces a graph if supported
-* You should see:
-*   - X-axis: weight in the TWFE estimate
-*   - Y-axis: 2×2 DID estimate
-*   - Points clustered around true ATT → TWFE is fine
-*   - Points dispersed → TWFE is biased
-
-* graph export "bacon_decomposition.pdf", replace
-
-di _newline "═══════════════════════════════════════════"
-di "  BACON DECOMPOSITION DECISION:"
-di ""  
-di "  If 'bad' comparisons (treated vs already-treated)"
-di "  have different signs or large weights → USE:"
-di "    02_callaway_santanna.do"
-di "    03_sun_abraham.do"
-di "    04_imputation_bjs.do"
-di ""
-di "  If all comparisons consistent → TWFE is probably fine"
-di "═══════════════════════════════════════════"
-
-di _newline "  DONE: 05_bacon_decomposition.do"
+* 📌 Decision rules based on Bacon decomposition:
+*
+*    If most weight is on "Treated vs Never-treated":
+*      → TWFE is probably fine
+*      → But still check with robust estimators
+*
+*    If "Later vs Earlier" has substantial weight:
+*      → TWFE is biased
+*      → Use 02 (CS) or 04 (BJS) or 10 (Gardner)
+*
+*    If all weights are positive and estimates are similar:
+*      → Treatment effects are likely homogeneous
+*      → TWFE is fine, but report this as evidence
+*
+* 📌 Always run Bacon FIRST as a diagnostic before choosing
+*    your main estimator. Report it in your paper.

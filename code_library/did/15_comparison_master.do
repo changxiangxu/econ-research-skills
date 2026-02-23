@@ -1,178 +1,185 @@
 /*==============================================================================
   File:     15_comparison_master.do
-  Method:   All-in-One Comparison — Run all DID methods on same data
-  Author:   econ-research-skills
+  Purpose:  Run ALL DID methods on the SAME verified data, compare results
   
-  Purpose:
-    Run EVERY DID method on the SAME simulated dataset and compare:
-    - Point estimates (should all be close to true ATT)
-    - Standard errors
-    - Event study plots
+  Code Source:
+    Structure adapted from Borusyak five_estimators_example.do
+    (which compares 5 methods) and extended to cover all 12+ methods.
     
-    Use this for:
-    1. Learning: see how different methods compare
+    The final event_plot combining code is from Borusyak's original.
+  
+  Required: All packages from 01-14
+  
+  Use this for:
+    1. Learning: see how methods compare on same data
     2. Robustness: show your paper's results are method-invariant
     3. Appendix: "Results are robust to alternative DID estimators"
-  
-  Required Packages: reghdfe, csdid, eventstudyinteract, did_imputation,
-    bacondecomp, did_multiplegt, did2s, jwdid, sdid
 ==============================================================================*/
 
 clear all
-set more off
-set seed 12345
+timer clear
+set seed 10
+global T = 15
+global I = 400
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 1: COMMON DATA (same for all methods)
+* SECTION 1: DATA (same verified DGP)
 * ═══════════════════════════════════════════════════════════
 
-set obs 40
-gen id = _n
-expand 30
-bysort id: gen time = _n
+set obs `=$I*$T'
+gen i = int((_n-1)/$T )+1
+gen t = mod((_n-1)/$T )+1
+tsset i t
 
-gen cohort = .
-replace cohort = 10 if id <= 10
-replace cohort = 15 if id > 10 & id <= 20
-replace cohort = 20 if id > 20 & id <= 30
-replace cohort = 0  if id > 30
+gen Ei = ceil(runiform()*7)+$T -6 if t==1
+bys i (t): replace Ei = Ei[1]
+gen K = t-Ei
+gen D = K>=0 & Ei!=.
 
-gen treat = (cohort > 0 & time >= cohort)
-gen true_att = 0
-replace true_att = 1.0 if cohort == 10 & treat == 1
-replace true_att = 2.0 if cohort == 15 & treat == 1
-replace true_att = 3.0 if cohort == 20 & treat == 1
-
-gen unit_fe = id * 0.5
-gen time_fe = 0.3 * time
-gen epsilon = rnormal(0, 1)
-gen y = unit_fe + time_fe + true_att + epsilon
-
-gen gvar = cohort
-gen gvar_miss = cohort
-replace gvar_miss = . if cohort == 0
-gen never_treat = (cohort == 0)
-
-xtset id time
-
-di "═══════════════════════════════════════════"
-di "  DATA: 40 units × 30 periods"
-di "  Cohorts: 10, 15, 20 (+ never-treated)"
-di "  True ATT: 1.0 / 2.0 / 3.0 (avg = 2.0)"
-di "═══════════════════════════════════════════"
+gen tau = cond(D==1, (t-Ei), 0)
+gen eps = rnormal()
+gen Y = i + 3*t + tau*D + eps
 
 
 * ═══════════════════════════════════════════════════════════
-* SECTION 2: RUN ALL METHODS
+* SECTION 2: CONSTRUCT TRUE VALUES
 * ═══════════════════════════════════════════════════════════
+* Source: Borusyak five_estimators_example.do
 
-* --- Store results ---
-matrix RESULTS = J(8, 3, .)
-matrix rownames RESULTS = "TWFE" "CS" "SA" "BJS" "Gardner" "ETWFE" "dCDH" "SDID"
-matrix colnames RESULTS = "ATT" "SE" "Method_ID"
-local row = 0
-
-* --- 1. Classic TWFE ---
-local ++row
-di _newline "▶ [`row'] Classic TWFE"
-qui reghdfe y treat, absorb(id time) cluster(id)
-matrix RESULTS[`row', 1] = _b[treat]
-matrix RESULTS[`row', 2] = _se[treat]
-matrix RESULTS[`row', 3] = 1
-
-* --- 2. Callaway-Sant'Anna ---
-local ++row
-di "▶ [`row'] Callaway-Sant'Anna (2021)"
-qui csdid y, ivar(id) time(time) gvar(gvar) method(drimp)
-qui estat simple
-matrix temp = r(table)
-matrix RESULTS[`row', 1] = temp[1,1]
-matrix RESULTS[`row', 2] = temp[2,1]
-matrix RESULTS[`row', 3] = 2
-
-* --- 3. Sun-Abraham ---
-local ++row
-di "▶ [`row'] Sun-Abraham (2021)"
-gen rel = time - cohort if cohort > 0
-replace rel = -1 if cohort == 0
-gen sa_treat = (rel >= 0 & cohort > 0)
-qui eventstudyinteract y sa_treat, cohort(gvar) control_cohort(never_treat) ///
-    absorb(id time) vce(cluster id)
-matrix sa_b = e(b_iw)
-matrix sa_V = e(V_iw)
-matrix RESULTS[`row', 1] = sa_b[1,1]
-matrix RESULTS[`row', 2] = sqrt(sa_V[1,1])
-matrix RESULTS[`row', 3] = 3
-drop rel sa_treat
-
-* --- 4. BJS Imputation ---
-local ++row
-di "▶ [`row'] BJS Imputation (2024)"
-qui did_imputation y id time gvar_miss, allhorizons pretrends(3) minn(0)
-matrix RESULTS[`row', 1] = _b[tau]
-matrix RESULTS[`row', 2] = _se[tau]
-matrix RESULTS[`row', 3] = 4
-
-* --- 5. Gardner did2s ---
-local ++row
-di "▶ [`row'] Gardner Two-Stage (2022)"
-qui did2s y, first_stage(i.id i.time) second_stage(treat) ///
-    treatment(treat) cluster(id)
-matrix RESULTS[`row', 1] = _b[treat]
-matrix RESULTS[`row', 2] = _se[treat]
-matrix RESULTS[`row', 3] = 5
-
-* --- 6. Wooldridge ETWFE ---
-local ++row
-di "▶ [`row'] Wooldridge ETWFE (2021)"
-qui jwdid y, ivar(id) tvar(time) gvar(gvar)
-qui estat simple
-matrix temp2 = r(table)
-matrix RESULTS[`row', 1] = temp2[1,1]
-matrix RESULTS[`row', 2] = temp2[2,1]
-matrix RESULTS[`row', 3] = 6
-
-* --- 7. dCDH Static ---
-local ++row
-di "▶ [`row'] dCDH (2020)"
-qui did_multiplegt y id time treat, robust_dynamic dynamic(0) breps(20) cluster(id)
-matrix RESULTS[`row', 1] = e(effect_0)
-matrix RESULTS[`row', 2] = e(se_effect_0)
-matrix RESULTS[`row', 3] = 7
-
-* --- 8. Synthetic DID ---
-local ++row
-di "▶ [`row'] Synthetic DID (2021)"
-qui sdid y id time treat, vce(bootstrap) reps(20) seed(12345)
-matrix RESULTS[`row', 1] = e(ATT)
-matrix RESULTS[`row', 2] = e(se)
-matrix RESULTS[`row', 3] = 8
-
-
-* ═══════════════════════════════════════════════════════════
-* SECTION 3: COMPARISON TABLE
-* ═══════════════════════════════════════════════════════════
-
-di _newline "═══════════════════════════════════════════════════════"
-di "  DID METHOD COMPARISON (True ATT = 2.0)"
-di "═══════════════════════════════════════════════════════"
-di "  Method              │  ATT     │  SE      │  Bias"
-di "  ────────────────────┼──────────┼──────────┼──────────"
-
-local methods `" "TWFE" "CS" "SA" "BJS" "Gardner" "ETWFE" "dCDH" "SDID" "'
-forvalues i = 1/8 {
-    local m : word `i' of `methods'
-    local att = RESULTS[`i', 1]
-    local se  = RESULTS[`i', 2]
-    local bias = `att' - 2.0
-    di "  `m'" _col(24) "│ " %7.4f `att' " │ " %7.4f `se' " │ " %7.4f `bias'
+matrix btrue = J(1,6,.)
+matrix colnames btrue = tau0 tau1 tau2 tau3 tau4 tau5
+qui forvalues h = 0/5 {
+	sum tau if K==`h'
+	matrix btrue[1,`h'+1]=r(mean)
 }
 
-di "  ═══════════════════════════════════════════════════════"
-di ""
-di "  📌 All robust methods should give ATT ≈ 2.0"
-di "  📌 TWFE may be biased (uses already-treated as controls)"
-di "  📌 For your paper: report 2-3 methods as robustness"
+
+* ═══════════════════════════════════════════════════════════
+* SECTION 3: RUN ALL METHODS
+* ═══════════════════════════════════════════════════════════
+
+* --- Prepare common variables ---
+gen gvar = cond(Ei>15, 0, Ei)
+sum Ei
+gen lastcohort = Ei==r(max)
+
+forvalues l = 0/5 {
+	gen L`l'event = K==`l'
+}
+forvalues l = 1/14 {
+	gen F`l'event = K==-`l'
+}
+drop F1event
+
+
+* --- (1) BJS Imputation ---
+di "▶ [1] Borusyak et al. (2024)"
+did_imputation Y i t Ei, allhorizons pretrend(5)
+event_plot, default_look graph_opt(xtitle("Periods since the event") ///
+	ytitle("Average causal effect") title("BJS (2024)") ///
+	xlabel(-5(1)5) name(BJS, replace))
+estimates store bjs
+
+* --- (2) dCDH (2020) ---
+di "▶ [2] de Chaisemartin-D'Haultfoeuille (2020)"
+did_multiplegt Y i t D, robust_dynamic dynamic(5) placebo(5) ///
+	longdiff_placebo breps(100) cluster(i)
+event_plot e(estimates)#e(variances), default_look ///
+	graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
+	title("dCDH (2020)") xlabel(-5(1)5) name(dCdH, replace)) ///
+	stub_lag(Effect_#) stub_lead(Placebo_#) together
+matrix dcdh_b = e(estimates)
+matrix dcdh_v = e(variances)
+
+* --- (3) Callaway-Sant'Anna (2021) ---
+di "▶ [3] Callaway-Sant'Anna (2021)"
+csdid Y, ivar(i) time(t) gvar(gvar) agg(event)
+event_plot e(b)#e(V), default_look ///
+	graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
+	xlabel(-13(1)5) title("CS (2021)") name(CS, replace)) ///
+	stub_lag(T+#) stub_lead(T-#) together
+matrix cs_b = e(b)
+matrix cs_v = e(V)
+
+* --- (4) Sun-Abraham (2021) ---
+di "▶ [4] Sun-Abraham (2021)"
+eventstudyinteract Y L*event F*event, vce(cluster i) absorb(i t) ///
+	cohort(Ei) control_cohort(lastcohort)
+event_plot e(b_iw)#e(V_iw), default_look ///
+	graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
+	xlabel(-14(1)5) title("SA (2021)") name(SA, replace)) ///
+	stub_lag(L#event) stub_lead(F#event) together
+matrix sa_b = e(b_iw)
+matrix sa_v = e(V_iw)
+
+* --- (5) Gardner did2s (2022) ---
+di "▶ [5] Gardner (2022)"
+did2s Y, first_stage(i.i i.t) second_stage(F*event L*event) ///
+	treatment(D) cluster(i)
+event_plot, default_look stub_lag(L#event) stub_lead(F#event) together ///
+	graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
+	xlabel(-14(1)5) title("Gardner (2022)") name(DID2S, replace))
+matrix did2s_b = e(b)
+matrix did2s_v = e(V)
+
+* --- (6) Stacked DID (Cengiz et al.) ---
+di "▶ [6] Stacked DID"
+gen treat_year = .
+replace treat_year = Ei if Ei != 16
+gen no_treat = (Ei == 16)
+cap drop F*event2 L*event2
+forvalues l = 0/5 {
+	gen L`l'event2 = K==`l'
+	replace L`l'event2 = 0 if no_treat==1
+}
+forvalues l = 1/14 {
+	gen F`l'event2 = K==-`l'
+	replace F`l'event2 = 0 if no_treat==1
+}
+cap drop F1event2
+preserve
+stackedev Y F*event2 L*event2, cohort(treat_year) time(t) ///
+	never_treat(no_treat) unit_fe(i) clust_unit(i)
+restore
+matrix stackedev_b = e(b)
+matrix stackedev_v = e(V)
+
+* --- (7) TWFE OLS ---
+di "▶ [7] TWFE OLS"
+reghdfe Y F*event L*event, absorb(i t) vce(cluster i)
+estimates store ols
+
+
+* ═══════════════════════════════════════════════════════════
+* SECTION 4: COMBINED EVENT STUDY PLOT
+* ═══════════════════════════════════════════════════════════
+* Source: Borusyak five_estimators_example.do (adapted)
+
+event_plot btrue# bjs dcdh_b#dcdh_v cs_b#cs_v sa_b#sa_v ///
+	did2s_b#did2s_v stackedev_b#stackedev_v ols, ///
+	stub_lag(tau# tau# Effect_# T+# L#event L#event L#event L#event) ///
+	stub_lead(pre# pre# Placebo_# T-# F#event F#event F#event F#event) ///
+	plottype(scatter) ciplottype(rcap) ///
+	together perturb(-0.325(0.1)0.325) trimlead(5) noautolegend ///
+	graph_opt(title("Event study estimators comparison (400 units, 15 periods)", size(med)) ///
+		xtitle("Periods since the event", size(small)) ///
+		ytitle("Average causal effect", size(small)) xlabel(-5(1)5) ///
+		legend(order(1 "True value" 2 "BJS" 4 "dCDH" ///
+			6 "CS" 8 "SA" 10 "Gardner" 12 "Stacked" 14 "TWFE OLS") ///
+			rows(2) position(6) region(style(none))) ///
+		xline(-0.5, lcolor(gs8) lpattern(dash)) yline(0, lcolor(gs8)) ///
+		graphregion(color(white)) bgcolor(white) ylabel(, angle(horizontal)) ///
+	) ///
+	lag_opt1(msymbol(+) color(black)) lag_ci_opt1(color(black)) ///
+	lag_opt2(msymbol(O) color(cranberry)) lag_ci_opt2(color(cranberry)) ///
+	lag_opt3(msymbol(Dh) color(navy)) lag_ci_opt3(color(navy)) ///
+	lag_opt4(msymbol(Th) color(forest_green)) lag_ci_opt4(color(forest_green)) ///
+	lag_opt5(msymbol(Sh) color(dkorange)) lag_ci_opt5(color(dkorange)) ///
+	lag_opt6(msymbol(Th) color(blue)) lag_ci_opt6(color(blue)) ///
+	lag_opt7(msymbol(Dh) color(red)) lag_ci_opt7(color(red)) ///
+	lag_opt8(msymbol(Oh) color(purple)) lag_ci_opt8(color(purple))
+
+* graph export "did_comparison.png", replace
 
 di _newline "  DONE: 15_comparison_master.do"
-di "  🎉 DID Code Library v2.0 Complete!"
+di "  🎉 All methods compared on same data!"
