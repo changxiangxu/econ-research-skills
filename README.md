@@ -1,186 +1,162 @@
 # 📚 Econ Research Skills
 
-> **A Complete AI Skill System & Step-by-Step Roadmap for Empirical Economics Research**
-> From Topic Selection to Journal Submission — 8 Skill Modules, 38 Tasks, 6-Stage Roadmap
+> **The Complete Empirical Economics Toolkit: From Topic Selection to Journal Submission**
+> 6 Stages · 20+ Modules · 8 AI Skills · 7 DID Methods · Stata/R Code Library
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stata](https://img.shields.io/badge/Code-Stata%20%7C%20R%20%7C%20Python-blue)](.)
-[![Stage](https://img.shields.io/badge/Stage-v2.0-green)](.)
-
-## 🎯 What Is This?
-
-A **world-class toolkit** for economics PhD students and researchers conducting empirical research. It combines:
-
-1. **8 AI Skill Modules** (38 tasks) — structured prompts that guide AI tools through every stage of research
-2. **6-Stage Roadmap** — a complete 10-month action plan from topic selection to submission
-3. **Curated GitHub Repos** — the best open-source tools, templates, and replication packages
-4. **Code Library** — ready-to-use Stata/R/Python code for DID, IV, RD, data cleaning, and more
-5. **Checklists** — endogeneity, robustness, pre-submission, and more
-
-Built on Stanford CS146S *"Power Prompting for LLMs"* methodology (System Prompts, Chain-of-Thought, Reflexion).
+[![Version](https://img.shields.io/badge/Version-v2.1-green)](.)
 
 ---
 
-## 🗺️ 10-Month Roadmap
+## What Is This?
+
+A **complete, open-source toolkit** for anyone writing an empirical economics paper. Whether you're a PhD student running your first DID or a seasoned researcher polishing a paper for the AER, this repo has something for you.
+
+**Three layers of content:**
+
+| Layer | What It Is | How to Use |
+|-------|-----------|------------|
+| 🤖 **AI Skills** (`skills/`) | 8 structured prompt modules, 38 tasks | Copy into your project → AI follows instructions |
+| 💻 **Code Library** (`code_library/`) | Ready-to-run Stata/R templates | Copy a `.do` file → replace data → run |
+| 📋 **References & Checklists** | Guides, checklists, templates | Read before submission |
+
+---
+
+## 🗺️ Full Roadmap: 6 Stages of Empirical Research
+
+### Stage 0: Project Setup
+| Module | Content | Location |
+|--------|---------|----------|
+| 🛠️ Tool Stack | Stata/R/Python selection, installation, 30+ essential packages | [tool_stack_guide.md](references/tool_stack_guide.md) |
+| 📁 Project Structure | Standard folder layout (`00_RawData → 03_Output`) | [templates/](templates/) |
+| 🔄 Reproducibility | Master script (one-click replication) | [stata/00_master.do](templates/stata/00_master.do) · [r/00_master.R](templates/r/00_master.R) |
+
+---
+
+### Stage 1: Topic Selection & Literature
+| Module | Content | Location |
+|--------|---------|----------|
+| 🎯 Topic Selection | Brainstorming · Background Brief · Feasibility Check | [Topic_Selector/](skills/Topic_Selector/) |
+| 📚 Literature | Deep Reading · Matrix Generation · Review Writing · Gap ID | [Literature_Navigator/](skills/Literature_Navigator/) |
+
+---
+
+### Stage 2: Theory & Background
+| Module | Content | Location |
+|--------|---------|----------|
+| 🏛️ Theoretical Framework | Framework Recommendation · Hypothesis Development · 30+ Theory Index | [Theoretical_Framework/](skills/Theoretical_Framework/) |
+
+---
+
+### Stage 3: Data
+| Module | Content | Location |
+|--------|---------|----------|
+| 🔧 Data Pipeline | Discovery · Cleaning · Management · Variable Description · Codebook | [Data_Pipeline/](skills/Data_Pipeline/) |
+| 📊 Data Cleaning Code | Import/merge · Missing values · Winsorize · Variable construction | `code_library/data_cleaning/` *(coming soon)* |
+
+---
+
+### Stage 4: Empirical Analysis
+| Module | Content | Location |
+|--------|---------|----------|
+| ⚗️ **DID (7 methods)** | TWFE · Callaway-Sant'Anna · Sun-Abraham · BJS Imputation · Bacon Decomposition · dCDH · HonestDiD | [code_library/did/](code_library/did/) ✅ |
+| 🔬 **IV** | 2SLS · Weak Instruments · Over-ID · Shift-Share | `code_library/iv/` *(coming soon)* |
+| 📐 **RDD** | Sharp · Fuzzy · McCrary · Bandwidth | `code_library/rdd/` *(coming soon)* |
+| 🛡️ **Robustness** | Placebo · Oster bounds · Permutation · Alt specs (7 tests) | `code_library/robustness/` *(coming soon)* |
+| 🔀 **Heterogeneity** | Split-sample · Interaction · Triple-diff | `code_library/heterogeneity/` *(coming soon)* |
+| ⚙️ **Mechanism** | Channel variables · Mediation (Baron-Kenny) | `code_library/mechanism/` *(coming soon)* |
+| 🧪 **Endogeneity** | Pre-trends · PSM-DID · Heckman | `code_library/endogeneity/` *(coming soon)* |
+| 🎯 Causal Inference Guide | DID Encyclopedia · Endogeneity Tests · Model Selection · Textbook Index | [Causal_Inference_Guide/](skills/Causal_Inference_Guide/) |
+| 📊 Results Manager | Interpretation · Heterogeneity Design · Table Formatting · Archiving | [Results_Manager/](skills/Results_Manager/) |
+| 💻 Code Project Manager | Master Script · Regression Pipeline · Code Review · Replication Code | [Code_Project_Manager/](skills/Code_Project_Manager/) |
+
+---
+
+### Stage 5: Paper Writing
+| Module | Content | Location |
+|--------|---------|----------|
+| ✍️ Academic Paper Writer | Drafting · Polishing · Abstract · Introduction · Conclusion · Language Refinement · Reviewer Response | [Academic_Paper_Writer/](skills/Academic_Paper_Writer/) |
+| 📊 Tables & Figures Code | Descriptive table · Regression table · Event study plot · Coefficient plot | `code_library/tables_figures/` *(coming soon)* |
+
+---
+
+### Stage 6: Submission & Beyond
+| Module | Content | Location |
+|--------|---------|----------|
+| ✅ Pre-Submission Checklist | Manuscript · Tables · Rigor · References · Replication package | [before_submission.md](checklists/before_submission.md) |
+| 🧪 Endogeneity Checklist | Placebo · Pre-trends · IV tests · Oster bounds · Permutation | [endogeneity_checklist.md](checklists/endogeneity_checklist.md) |
+| 🛡️ Robustness Checklist | 10 categories, 15+ specific tests | [robustness_checklist.md](checklists/robustness_checklist.md) |
+| 📝 Reviewer Response | Point-by-point template · Common scenarios | [response_to_reviewers.md](checklists/response_to_reviewers.md) |
+
+---
+
+## 💻 DID Code Library (Highlight)
+
+The crown jewel of this repo — **7 complete, tutorial-style Stata do-files** covering every modern DID method. Each file is self-contained with simulated data, runs independently, and includes line-by-line comments explaining *why*, not just *how*.
 
 ```
-Month 1-2          Month 3-5           Month 6-8          Month 9        Month 10
-┌──────────┐    ┌──────────────┐    ┌──────────────┐   ┌──────────┐   ┌──────────┐
-│ 📖 Topic  │ →  │ 🔧 Data &    │ →  │ 📊 Full      │ → │ ✍️ Write  │ → │ 📤 Submit │
-│ & Lit     │    │ Cleaning     │    │ Analysis     │   │ & Polish │   │ & Replic │
-│ Review    │    │ & Baseline   │    │ DID/IV/Rob   │   │          │   │ Package  │
-└──────────┘    └──────────────┘    └──────────────┘   └──────────┘   └──────────┘
-  Stage 1-2          Stage 3            Stage 4           Stage 5        Stage 6
+Which DID should I use?
+│
+├── Simple 2×2 design? → 01_classic_twfe.do
+├── Staggered rollout?
+│   ├── Step 1: Diagnose → 05_bacon_decomposition.do
+│   ├── Step 2: Estimate → 02 (CS) or 03 (SA) or 04 (BJS)
+│   └── Step 3: Sensitivity → 07_honestdid.do
+└── Treatment switches on/off? → 06_dcdh.do
 ```
 
-| Stage | Duration | Key Activities | Output |
-|-------|----------|---------------|--------|
-| **0. Setup** | 1 week | Tool stack, folder structure, Git | Project repo + master script |
-| **1. Topic & Literature** | 2-4 weeks | Topic search, 10-15 papers, literature matrix | Topic brief (1-2 pages) |
-| **2. Theory & Background** | 1-2 weeks | Theoretical framework, DAGs, policy background | Theory section draft |
-| **3. Data** | 3-6 weeks | Acquire, clean, construct variables, codebook | `cleaned.dta` + data dictionary |
-| **4. Analysis** | 4-8 weeks | Baseline → Robustness → Heterogeneity → Mechanism → DID | All tables & figures |
-| **5. Writing** | 4-6 weeks | Draft all sections, iterate introduction & conclusion | Complete manuscript |
-| **6. Submission** | Ongoing | Replication package, pre-print, journal submission | Published paper 🎉 |
+| File | Method | Reference |
+|------|--------|-----------|
+| [01_classic_twfe.do](code_library/did/01_classic_twfe.do) | Classic TWFE | Angrist & Pischke (2009) |
+| [02_callaway_santanna.do](code_library/did/02_callaway_santanna.do) | Callaway & Sant'Anna | *JoE* 2021 |
+| [03_sun_abraham.do](code_library/did/03_sun_abraham.do) | Sun & Abraham | *JoE* 2021 |
+| [04_imputation_bjs.do](code_library/did/04_imputation_bjs.do) | BJS Imputation | *ReStud* 2024 |
+| [05_bacon_decomposition.do](code_library/did/05_bacon_decomposition.do) | Bacon Decomposition | *JoE* 2021 |
+| [06_dcdh.do](code_library/did/06_dcdh.do) | de Chaisemartin & D'Haultfœuille | *AER* 2020 |
+| [07_honestdid.do](code_library/did/07_honestdid.do) | Rambachan & Roth Sensitivity | *ReStud* 2023 |
 
 ---
 
-## 📦 Repository Structure
+## 📖 Essential Reading
 
-```
-econ-research-skills/
-├── 📁 skills/                 # 8 AI Skill Modules (38 tasks)
-├── 📁 code_library/           # Ready-to-use method code
-│   ├── did/                   # DID full suite (7 methods)
-│   ├── data_cleaning/         # Winsorize, missing values, panel balance
-│   └── tables_figures/        # Event study plots, coefficient plots
-├── 📁 templates/              # Project templates (Stata & R)
-│   ├── stata/                 # Master.do + 8 sub-files
-│   └── r/                     # Master.R equivalent
-├── 📁 references/             # Textbook index + frontier papers + GitHub repos
-├── 📁 checklists/             # Endogeneity, robustness, pre-submission
-└── 📁 examples/               # Complete DID example with public data
-```
+| # | Book | Free? | Best For |
+|---|------|-------|----------|
+| 1 | [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) | ✅ | DID, IV, RD — full code |
+| 2 | *Mastering 'Metrics* (Angrist & Pischke) | ❌ | Gentle intro |
+| 3 | [*The Effect*](https://theeffectbook.net/) (Huntington-Klein) | ✅ | DAGs, modern DID |
+| 4 | *Mostly Harmless Econometrics* (Angrist & Pischke) | ❌ | The bible |
+| 5 | [*Causal Inference: What If*](https://www.hsph.harvard.edu/miguel-hernan/causal-inference-book/) (Hernán & Robins) | ✅ | Mechanism analysis |
 
----
-
-## 🤖 AI Skill Modules (`skills/`)
-
-| Module | Tasks | Core Capabilities |
-|--------|-------|-------------------|
-| 🎯 [Topic_Selector](skills/Topic_Selector/) | 3 | Brainstorming · Background Brief · Feasibility Assessment |
-| 📚 [Literature_Navigator](skills/Literature_Navigator/) | 4 | Deep Reading · Literature Matrix · Review Writing · Gap Identification |
-| ⚗️ [Causal_Inference_Guide](skills/Causal_Inference_Guide/) | 6 | DID Encyclopedia (7 methods) · Endogeneity Tests · Robustness Menu · Textbook Index · Model Selection |
-| 🏛️ [Theoretical_Framework](skills/Theoretical_Framework/) | 3 | Framework Recommendation · Hypothesis Development · 30+ Theory Index |
-| 🔧 [Data_Pipeline](skills/Data_Pipeline/) | 5 | Data Discovery · Cleaning · Management Standards · Variable Description · Data Dictionary |
-| 💻 [Code_Project_Manager](skills/Code_Project_Manager/) | 5 | Master Script · Regression Pipeline · Code Review · Documentation · Replication Code |
-| 📊 [Results_Manager](skills/Results_Manager/) | 5 | Results Interpretation · Heterogeneity Design · Mechanism Analysis · Table Formatting · Archiving |
-| ✍️ [Academic_Paper_Writer](skills/Academic_Paper_Writer/) | 7 | Drafting · Polishing · Reviewer Response · Abstract · Introduction · Conclusion · Language Refinement |
-
----
-
-## 📖 Essential Reading (Recommended Order)
-
-| # | Book | Author | Level | Free? | Best For |
-|---|------|--------|-------|-------|----------|
-| 1 | [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) | Scott Cunningham | ⭐⭐ | ✅ Free online | DID, IV, RD with full Stata/R/Python code |
-| 2 | *Mastering 'Metrics* | Angrist & Pischke | ⭐ | ❌ | Gentle intro to causal inference |
-| 3 | [*The Effect*](https://theeffectbook.net/) | Nick Huntington-Klein | ⭐⭐ | ✅ Free online | Research design, DAGs, modern DID |
-| 4 | *Mostly Harmless Econometrics* | Angrist & Pischke | ⭐⭐ | ❌ | The causal inference bible |
-| 5 | [*Causal Inference: What If*](https://www.hsph.harvard.edu/miguel-hernan/causal-inference-book/) | Hernán & Robins | ⭐⭐⭐ | ✅ Free PDF | Potential outcomes, mechanism analysis |
-| 6 | *Causal Inference for Statistics...* | Imbens & Rubin | ⭐⭐⭐ | ❌ | Mathematical foundations |
-
----
-
-## 🔗 Curated GitHub Repositories
-
-### 🏗️ Project Templates (Fork One to Start!)
-
-| Repository | Description | Stars |
-|-----------|-------------|-------|
-| [OpenSourceEconomics/econ-project-templates](https://github.com/OpenSourceEconomics/econ-project-templates) | **Best-in-class** reproducible research template with Snakemake, auto-tables, one-click replication | ⭐⭐⭐ |
-| [lachlandeer/snakemake-econ-r](https://github.com/lachlandeer/snakemake-econ-r) | Snakemake pipeline template for R users | ⭐⭐ |
-| [aeturrell/coding-for-economists](https://github.com/aeturrell/coding-for-economists) | Complete coding guide + project structure for economists | ⭐⭐⭐ |
-
-### ⚗️ Causal Inference Code & Data
-
-| Repository | Description | Language |
-|-----------|-------------|----------|
-| [scunning1975/mixtape](https://github.com/scunning1975/mixtape) | All Mixtape chapters — full code + data | Stata/R/Python |
-| [NickCH-K/causaldata](https://github.com/NickCH-K/causaldata) | All example datasets from Mixtape + The Effect + What If | R/Stata/Python |
-| [vikjam/mostly-harmless-replication](https://github.com/vikjam/mostly-harmless-replication) | Full replication of all MHE tables & figures | Stata/R/Python/Julia |
-| [matheusfacure/python-causality-handbook](https://github.com/matheusfacure/python-causality-handbook) | Causal inference handbook with Python | Python |
-
-### 📐 DID Methods (Modern)
-
-| Repository | Description | Method |
-|-----------|-------------|--------|
-| [bcallaway11/did](https://github.com/bcallaway11/did) | **Official** Callaway & Sant'Anna package | R |
-| [friosavila/csdid](https://github.com/friosavila/csdid) | Callaway & Sant'Anna for Stata | Stata |
-| [lsun20/eventstudyinteract](https://github.com/lsun20/eventstudyinteract) | Sun & Abraham interaction-weighted estimator | Stata |
-| [borusyak/did_imputation](https://github.com/borusyak/did_imputation) | Borusyak, Jaravel & Spiess imputation | Stata/R |
-| [asheshrambachan/HonestDiD](https://github.com/asheshrambachan/HonestDiD) | Rambachan & Roth sensitivity analysis | R/Stata |
-| [pedrohcgs/CS_RR](https://github.com/pedrohcgs/CS_RR) | CS + Rambachan-Roth sensitivity extension | R |
-| [Mixtape-Sessions](https://github.com/Mixtape-Sessions) | Cunningham's DID workshop materials + code | Multi |
-| [kylebutts/did2s](https://github.com/kylebutts/did2s) | Gardner two-step DID estimator | R/Stata |
-
-### 🔎 Resource Collections
-
-| Repository | Description |
-|-----------|-------------|
-| [matteocourthoud/awesome-causal-inference](https://github.com/matteocourthoud/awesome-causal-inference) | **Most comprehensive** causal inference resource list |
-| [ledwindra/replication-code-economics](https://github.com/ledwindra/replication-code-economics) | Index of top journal replication packages on GitHub |
-| [NickCH-K/TheEffectAssignments](https://github.com/NickCH-K/TheEffectAssignments) | The Effect assignments + DAG drawing code |
-
----
-
-## ✅ Checklists (`checklists/`)
-
-Quick-reference checklists for critical stages:
-
-- [**Endogeneity Testing Checklist**](checklists/endogeneity_checklist.md) — Placebo, pre-trends, IV tests, Oster bounds
-- [**Robustness Checks Checklist**](checklists/robustness_checklist.md) — 15 types of robustness checks
-- [**Pre-Submission Checklist**](checklists/before_submission.md) — Final review before sending to journal
-- [**Reviewer Response Template**](checklists/response_to_reviewers.md) — Structured response format
-
----
-
-## 🛠️ Tool Stack
-
-| Category | Recommended | Notes |
-|----------|------------|-------|
-| **Data & Regression** | Stata (most stable) / R (free, ggplot2) / Python (pandas + linearmodels) | Pick one as primary |
-| **Version Control** | Git + GitHub | Non-negotiable |
-| **References** | Zotero + Better BibTeX | Free, integrates with Word/LaTeX |
-| **Writing** | Overleaf (LaTeX) or Word + Grammarly | LaTeX preferred for journals |
-| **Tables** | `estout`/`esttab` (Stata) / `modelsummary` (R) / `stargazer` (Python) | Auto-export to .tex |
-| **Reproducibility** | `master.do` (Stata) / `renv` + Quarto (R) / `venv` + Jupyter (Python) | One-click replication |
+See [textbook_index.md](references/textbook_index.md) for chapter-by-chapter index and [github_repos.md](references/github_repos.md) for 20+ curated GitHub repositories.
 
 ---
 
 ## 🚀 Quick Start
 
-### Option 1: Use with AI Tools
-Place the `skills/` folder in your project directory. AI tools will automatically discover and follow the instructions.
+```bash
+# Clone the repo
+git clone https://github.com/changxiangxu/econ-research-skills.git
 
-### Option 2: Fork as Project Template
-1. Fork this repo
-2. Replace `examples/` with your data
-3. Follow the 6-stage roadmap
-4. Use `code_library/` templates for your analysis
+# Try a DID method (no data needed — simulated inside)
+# Open any .do file in Stata and run it
+```
 
-### Option 3: Reference Manual
-Read individual `SKILL.md` files and `checklists/` as structured guides.
+**Three ways to use this repo:**
+
+1. **🤖 AI-Powered**: Copy `skills/` into your project → AI tools auto-discover the skill files
+2. **💻 Code Templates**: Copy any `.do` file → replace simulated data with yours → run
+3. **📖 Reference Manual**: Read `checklists/` and `references/` as structured guides
 
 ---
 
 ## 🤝 Contributing
 
 Contributions welcome! You can:
-- Add code templates to `code_library/`
-- Improve or translate Skill modules
-- Add new checklists
-- Share replication examples
+- Add code templates (especially R versions of existing Stata files)
+- Improve or translate skill modules
+- Add new checklists or reference guides
+- Share worked examples with public data
 
 ## 📄 License
 
