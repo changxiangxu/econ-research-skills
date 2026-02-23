@@ -1,0 +1,69 @@
+# ═══════════════════════════════════════════════
+# .gitignore for Economics Research Projects
+# ═══════════════════════════════════════════════
+
+# ─── Data files (too large for Git) ───────────
+*.dta
+*.csv
+*.xlsx
+*.xls
+*.sav
+*.rds
+*.RData
+*.feather
+*.parquet
+
+# ─── Stata temporary files ────────────────────
+*.log
+*.smcl
+*.stpr
+*.sthlp
+
+# ─── R temporary files ───────────────────────
+.Rhistory
+.Rdata
+.RData
+.Ruserdata
+.Rproj.user/
+
+# ─── Python ──────────────────────────────────
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# ─── Output files (regenerate from code) ─────
+*.pdf
+*.png
+*.eps
+*.jpg
+
+# ─── LaTeX auxiliary files ───────────────────
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.out
+*.toc
+*.lof
+*.lot
+
+# ─── OS files ────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDE ─────────────────────────────────────
+.vscode/
+.idea/
+
+# ═══════════════════════════════════════════════
+# EXCEPTIONS: Keep these even if matched above
+# ═══════════════════════════════════════════════
+# Keep example data in examples/ directory
+!examples/**/*.dta
+!examples/**/*.csv
+# Keep template files
+!templates/**/*
