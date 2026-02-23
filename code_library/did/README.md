@@ -1,10 +1,9 @@
-# DID Methods Code Library
+# DID Methods Code Library v2.0 (2026 Frontier)
 
-A complete, self-contained code library for Difference-in-Differences methods.
-Each file generates its own simulated data and runs independently — **no external data needed**.
+A complete, self-contained code library covering **15 DID methods**.
+Each file generates its own simulated data and runs independently.
 
-Inspired by [许文立 (wenddymacro)](https://github.com/wenddymacro/straggered_did_13) and
-[Asjad Naqvi's DID Notes](https://github.com/asjadnaqvi/Diff-in-Diff-Notes).
+Inspired by [许文立 (wenddymacro)](https://github.com/wenddymacro/straggered_did_13) and [Asjad Naqvi's DID Notes](https://github.com/asjadnaqvi/Diff-in-Diff-Notes).
 
 ---
 
@@ -13,45 +12,43 @@ Inspired by [许文立 (wenddymacro)](https://github.com/wenddymacro/straggered_
 ```
 What is your setup?
 │
-├── Only 2 periods × 2 groups?
-│   └── ✅ 01_classic_twfe.do — Classic TWFE, simplest
+├── Simple 2×2 design?
+│   └── 01_classic_twfe.do
 │
-├── Staggered rollout (units treated at different times)?
-│   ├── Step 1: Run 05_bacon_decomposition.do to diagnose TWFE bias
-│   ├── Step 2: Choose a robust estimator:
-│   │   ├── Want ATT(g,t) + flexible aggregation? → 02_callaway_santanna.do
-│   │   ├── Want event study with interaction weights? → 03_sun_abraham.do
-│   │   ├── Want imputation-based (cleanest)? → 04_imputation_bjs.do
-│   │   └── Want minimal assumptions? → 06_dcdh.do
-│   └── Step 3: Sensitivity analysis → 07_honestdid.do
+├── Staggered rollout (standard)?
+│   ├── Diagnose: 05_bacon_decomposition.do
+│   ├── Estimate: 02 (CS) / 03 (SA) / 04 (BJS) / 10 (Gardner) / 12 (ETWFE)
+│   └── Sensitivity: 07_honestdid.do
 │
-└── Not sure?
-    └── Start with 01 → 05 → then pick from 02-04
+├── Treatment switches on/off?
+│   └── 06_dcdh.do or 08_did_multiplegt_dyn.do
+│
+├── Continuous treatment (dose/intensity)?
+│   └── 09_did_multiplegt_stat.do or 14_continuous_did.do
+│
+├── Weak parallel trends?
+│   └── 13_synth_did.do
+│
+└── Want to compare all methods?
+    └── 15_comparison_master.do
 ```
 
-## File List
+## Complete File List
 
-| File | Method | Key Reference | Required Package |
-|------|--------|---------------|-----------------|
-| `01_classic_twfe.do` | Classic Two-Way Fixed Effects | Angrist & Pischke (2009) | `reghdfe` |
-| `02_callaway_santanna.do` | Callaway & Sant'Anna (2021) | *Journal of Econometrics* | `csdid` |
-| `03_sun_abraham.do` | Sun & Abraham (2021) | *Journal of Econometrics* | `eventstudyinteract` |
-| `04_imputation_bjs.do` | Borusyak, Jaravel & Spiess (2024) | *Review of Economic Studies* | `did_imputation` |
-| `05_bacon_decomposition.do` | Goodman-Bacon (2021) | *Journal of Econometrics* | `bacondecomp` |
-| `06_dcdh.do` | de Chaisemartin & D'Haultfœuille (2020) | *American Economic Review* | `did_multiplegt` |
-| `07_honestdid.do` | Rambachan & Roth (2023) | *Review of Economic Studies* | `honestdid` |
-
-## Data Generating Process
-
-All files use a common simulated panel:
-- **40 units** observed over **30 periods** (t = 1,...,30)
-- **Staggered treatment**: units enter treatment at t ∈ {10, 15, 20}, some never treated
-- **True ATT = 2.0** (known, so we can benchmark estimators)
-- **Heterogeneous effects optional**: later cohorts may have larger/smaller effects
-
-## How to Use
-
-1. Copy any `.do` file to your Stata working directory
-2. Run it — no data download needed, data is simulated inside the script
-3. Read the comments to understand each step
-4. Replace the simulated data section with your own data
+| # | File | Method | Author/Year | Use Case | Install |
+|---|------|--------|-------------|----------|---------|
+| 01 | `01_classic_twfe.do` | Classic TWFE | Angrist & Pischke | Simple 2×2 | `reghdfe` |
+| 02 | `02_callaway_santanna.do` | Group-Time ATT | Callaway & Sant'Anna (2021) | Staggered | `csdid` |
+| 03 | `03_sun_abraham.do` | Interaction-Weighted | Sun & Abraham (2021) | Staggered | `eventstudyinteract` |
+| 04 | `04_imputation_bjs.do` | Imputation | Borusyak, Jaravel & Spiess (2024) | Staggered | `did_imputation` |
+| 05 | `05_bacon_decomposition.do` | TWFE Decomposition | Goodman-Bacon (2021) | Diagnostic | `bacondecomp` |
+| 06 | `06_dcdh.do` | Heterogeneous FE | de Chaisemartin & D'Haultfœuille (2020) | Non-absorbing | `did_multiplegt` |
+| 07 | `07_honestdid.do` | Sensitivity Analysis | Rambachan & Roth (2023) | Robustness | `honestdid` |
+| 08 | `08_did_multiplegt_dyn.do` | Dynamic Non-Binary | dCDH (2024) | Switching treatment | `did_multiplegt_dyn` |
+| 09 | `09_did_multiplegt_stat.do` | Continuous + Stayers | dCDH (2024) | Continuous dose | `did_multiplegt_stat` |
+| 10 | `10_gardner_did2s.do` | Two-Stage | Gardner (2022) | Large samples | `did2s` |
+| 11 | `11_stacked_did.do` | Stacked Regression | Wing et al. (2024) | TWFE-compatible | `reghdfe` |
+| 12 | `12_wooldridge_etwfe.do` | Extended TWFE | Wooldridge (2021) | Simple fix | `jwdid` |
+| 13 | `13_synth_did.do` | Synthetic DID | Arkhangelsky et al. (2021) | Weak parallel trends | `sdid` |
+| 14 | `14_continuous_did.do` | Continuous Treatment | Callaway et al. (2024) | Dose-response | manual |
+| 15 | `15_comparison_master.do` | All Methods Comparison | — | Robustness appendix | all |
