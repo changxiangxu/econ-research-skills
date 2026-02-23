@@ -1,10 +1,11 @@
 # 📚 Econ Research Skills
 
 > **AI Skills + Code Templates for Empirical Economics Research**
-> 8 Skill Modules · 38 Tasks · 7 DID Methods · Stata Code Library
+> 8 Skill Modules · 38 Tasks · 15 DID Methods (2026 Frontier) · Stata Code Library
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stata](https://img.shields.io/badge/Code-Stata-blue)](.)
+[![DID](https://img.shields.io/badge/DID_Methods-15-orange)](code_library/did/)
 
 ---
 
@@ -34,23 +35,27 @@ Two things that don't exist anywhere else:
 
 ## 💻 Code Library (`code_library/`)
 
-### DID Methods (7 files) ✅
+### DID Methods v2.0 — 15 Methods (2026 Frontier) ✅
 
-Each file: simulated data → estimation → event study plot → table export. Line-by-line comments.
+Each file: simulated data → estimation → event study plot → table export. Line-by-line comments. See [DID README](code_library/did/README.md) for decision tree.
 
-```
-Which DID? → 01 (classic) → 05 (diagnose) → 02/03/04 (robust) → 07 (sensitivity)
-```
-
-| File | Method | Reference |
-|------|--------|-----------|
-| [01_classic_twfe.do](code_library/did/01_classic_twfe.do) | Classic TWFE | Angrist & Pischke (2009) |
-| [02_callaway_santanna.do](code_library/did/02_callaway_santanna.do) | Callaway & Sant'Anna | *JoE* 2021 |
-| [03_sun_abraham.do](code_library/did/03_sun_abraham.do) | Sun & Abraham | *JoE* 2021 |
-| [04_imputation_bjs.do](code_library/did/04_imputation_bjs.do) | BJS Imputation | *ReStud* 2024 |
-| [05_bacon_decomposition.do](code_library/did/05_bacon_decomposition.do) | Bacon Decomposition | *JoE* 2021 |
-| [06_dcdh.do](code_library/did/06_dcdh.do) | de Chaisemartin & D'Haultfœuille | *AER* 2020 |
-| [07_honestdid.do](code_library/did/07_honestdid.do) | Rambachan & Roth Sensitivity | *ReStud* 2023 |
+| # | File | Method | Reference |
+|---|------|--------|-----------|
+| 01 | [classic_twfe.do](code_library/did/01_classic_twfe.do) | Classic TWFE | Angrist & Pischke (2009) |
+| 02 | [callaway_santanna.do](code_library/did/02_callaway_santanna.do) | Callaway & Sant'Anna | *JoE* 2021 |
+| 03 | [sun_abraham.do](code_library/did/03_sun_abraham.do) | Sun & Abraham | *JoE* 2021 |
+| 04 | [imputation_bjs.do](code_library/did/04_imputation_bjs.do) | BJS Imputation | *ReStud* 2024 |
+| 05 | [bacon_decomposition.do](code_library/did/05_bacon_decomposition.do) | Bacon Decomposition | *JoE* 2021 |
+| 06 | [dcdh.do](code_library/did/06_dcdh.do) | de Chaisemartin & D'Haultfœuille | *AER* 2020 |
+| 07 | [honestdid.do](code_library/did/07_honestdid.do) | Rambachan & Roth Sensitivity | *ReStud* 2023 |
+| 08 | [did_multiplegt_dyn.do](code_library/did/08_did_multiplegt_dyn.do) | dCDH Dynamic (non-binary) | dCDH 2024 |
+| 09 | [did_multiplegt_stat.do](code_library/did/09_did_multiplegt_stat.do) | Continuous + Stayers | dCDH 2024 |
+| 10 | [gardner_did2s.do](code_library/did/10_gardner_did2s.do) | Gardner Two-Stage | Gardner 2022 |
+| 11 | [stacked_did.do](code_library/did/11_stacked_did.do) | Stacked Regression | Wing et al. 2024 |
+| 12 | [wooldridge_etwfe.do](code_library/did/12_wooldridge_etwfe.do) | Extended TWFE | Wooldridge 2021 |
+| 13 | [synth_did.do](code_library/did/13_synth_did.do) | Synthetic DID | Arkhangelsky et al. 2021 |
+| 14 | [continuous_did.do](code_library/did/14_continuous_did.do) | Continuous Treatment | Callaway et al. 2024 |
+| 15 | [comparison_master.do](code_library/did/15_comparison_master.do) | **All Methods Comparison** | — |
 
 ### Coming Soon
 
